@@ -130,6 +130,16 @@ void DarwinMediaService::SetMetaData(const Napi::CallbackInfo& info) {
   unsigned int currentTime = info[5].As<Napi::Number>();
   unsigned int duration = info[6].As<Napi::Number>();
 
+  std::string albumArtPath = info[7].As<Napi::String>().Utf8Value().c_str();
+
+  if (this->currentArtPath != albumArtPath && albumArtPath != "") {
+    this->currentArtPath = albumArtPath;
+    this->currentImage = [[NSImage alloc] initWithContentsOfFile:[NSString stringWithUTF8String:albumArtPath.c_str()]];
+    this->currentArtwork = [[MPMediaItemArtwork alloc] initWithBoundsSize:[this->currentImage size] requestHandler:^NSImage * _Nonnull(CGSize size) {
+        return this->currentImage;
+    }];
+  }
+
   NSMutableDictionary *songInfo = [[NSMutableDictionary alloc] init];
   [songInfo setObject:[NSString stringWithUTF8String:songTitle.c_str()] forKey:MPMediaItemPropertyTitle];
   [songInfo setObject:[NSString stringWithUTF8String:songArtist.c_str()] forKey:MPMediaItemPropertyArtist];
@@ -137,6 +147,9 @@ void DarwinMediaService::SetMetaData(const Napi::CallbackInfo& info) {
   [songInfo setObject:[NSNumber numberWithFloat:currentTime] forKey:MPNowPlayingInfoPropertyElapsedPlaybackTime];
   [songInfo setObject:[NSNumber numberWithFloat:duration] forKey:MPMediaItemPropertyPlaybackDuration];
   [songInfo setObject:[NSNumber numberWithFloat:songID] forKey:MPMediaItemPropertyPersistentID];
+  if (this->currentArtwork != nullptr) {
+    [songInfo setObject:this->currentArtwork forKey:MPMediaItemPropertyArtwork];
+  }
 
   if (songState == "playing") {
     [MPNowPlayingInfoCenter defaultCenter].playbackState = MPNowPlayingPlaybackStatePlaying;
@@ -148,3 +161,9 @@ void DarwinMediaService::SetMetaData(const Napi::CallbackInfo& info) {
 
   [[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo:songInfo];
 }
+
+/*
+dictionary:
+song id -> artwork
+int -> UIImage
+*/

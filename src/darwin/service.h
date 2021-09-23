@@ -2,6 +2,7 @@
 #define MYOBJECT_H
 
 #include "module.h"
+#import <AppKit/AppKit.h>
 
 class DarwinMediaService : public Napi::ObjectWrap<DarwinMediaService> {
  public:
@@ -18,6 +19,9 @@ class DarwinMediaService : public Napi::ObjectWrap<DarwinMediaService> {
  private:
   static Napi::FunctionReference constructor;
   std::string queryString_;
+  std::string currentArtPath = "";
+  NSImage *currentImage = nullptr;
+  MPMediaItemArtwork *currentArtwork = nullptr;
 };
 
 @interface NativeMediaController : NSObject { }
